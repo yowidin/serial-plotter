@@ -1,0 +1,12 @@
+BasedOnStyle: Chromium
+
+AccessModifierOffset: -3
+ColumnLimit: 80
+DerivePointerAlignment: false
+PointerAlignment: Right
+IndentWidth: 3
+BreakConstructorInitializersBeforeComma: true
+ConstructorInitializerIndentWidth: 3
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+SpacesBeforeTrailingComments: 1
+SpacesInCStyleCastParentheses: false

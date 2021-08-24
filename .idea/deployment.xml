@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="Docker SSH (f993c16e-16b3-4a9d-8647-e5571485cbd1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_opengl3.cpp" web="/" />
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_sdl.cpp" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ETS-NG (7d64944d-c596-4e9d-9e9c-cf3aba3f525f)">
+        <serverdata>
+          <mappings>
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_opengl3.cpp" web="/" />
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_sdl.cpp" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ci-sshd (9180840e-86a2-4057-8ee9-e983cbe764c1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_opengl3.cpp" web="/" />
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_sdl.cpp" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ismc-c-ssh (853cd1ae-df56-4601-87c5-a0e11abdbecb)">
+        <serverdata>
+          <mappings>
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_opengl3.cpp" web="/" />
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_sdl.cpp" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="rps-ssh (b08476c3-5ee4-4d32-af5f-d88141ca7acc)">
+        <serverdata>
+          <mappings>
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_opengl3.cpp" web="/" />
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_sdl.cpp" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="rps-ssh (bafbb048-ff99-425b-9f57-cd114432a3e7)">
+        <serverdata>
+          <mappings>
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_opengl3.cpp" web="/" />
+            <mapping local="$USER_HOME$/.conan/data/imgui/1.83/conan-burrito/stable/package/cac88dea915c1847f5962a85e3de7df335b12c83/share/imgui_impl_sdl.cpp" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
