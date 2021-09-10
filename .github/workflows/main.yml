@@ -1,12 +1,5 @@
 name: build
 
-env:
-  CONAN_USERNAME: "conan-burrito"
-  CONAN_UPLOAD: "https://conan.yobasoft.de"
-  CONAN_STABLE_BRANCH_PATTERN: "release/*"
-  CONAN_LOGIN_USERNAME: "${{ secrets.CONAN_LOGIN_USERNAME }}"
-  CONAN_PASSWORD: "${{ secrets.CONAN_PASSWORD }}"
-
 on:
   push:
     branches:
@@ -42,6 +35,9 @@ jobs:
             pip install conan conan_package_tools
             conan remote disable conan-center
             conan config install ${{ github.workspace }}/profiles/settings.yml
+            conan remote add -i 0 conan-burrito ${{ secrets.CONAN_REMOTE }}
+            conan user -r conan-burrito ${{ secrets.CONAN_USER }} -p ${{ secrets.CONAN_PASSWORD }}
+
       - name: Build native
         run:  |
           python .ci/build.py
