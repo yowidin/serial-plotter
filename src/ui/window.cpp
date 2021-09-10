@@ -74,7 +74,7 @@ window::window(const asp::options &opts,
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
    // GL 3.0 + GLSL 130
-   logs_->add_entry("Setting up GL3.0 + GLS 130");
+   logs.add_entry("Setting up GL3.0 + GLS 130");
    const char *glsl_version = "#version 130";
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,

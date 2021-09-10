@@ -17,7 +17,7 @@
 
 namespace asp {
 
-class options;
+struct options;
 
 namespace ui {
 class logs;

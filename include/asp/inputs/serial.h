@@ -18,7 +18,7 @@
 
 namespace asp {
 
-class options;
+struct options;
 
 namespace inputs {
 
