@@ -1,0 +1,52 @@
+name: build
+
+env:
+  CONAN_USERNAME: "conan-burrito"
+  CONAN_UPLOAD: "https://conan.yobasoft.de"
+  CONAN_STABLE_BRANCH_PATTERN: "release/*"
+  CONAN_LOGIN_USERNAME: "${{ secrets.CONAN_LOGIN_USERNAME }}"
+  CONAN_PASSWORD: "${{ secrets.CONAN_PASSWORD }}"
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  build:
+    name: build-all
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+          - ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Checkout profiles
+        uses: actions/checkout@v2
+        with:
+          repository: conan-burrito/profiles
+          path: profiles
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip setuptools wheel
+            pip install conan conan_package_tools
+            conan remote disable conan-center
+            conan config install ${{ github.workspace }}/profiles/settings.yml
+      - name: Build native
+        run:  |
+          python .ci/build.py
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v2
+        with:
+          name: serial-plotter
+          path: ${{ github.workspace }}/_build/bin/serial-plotter*

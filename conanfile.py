@@ -1,6 +1,4 @@
-from conans import ConanFile, CMake, tools
-
-import os
+from conans import ConanFile, CMake
 
 
 class Recipe(ConanFile):
@@ -32,17 +30,3 @@ class Recipe(ConanFile):
             self.options['glad'].gles2_version = '3.0'
         else:
             self.options['glad'].gl_version = '3.2'
-
-    def imports(self):
-        # Copy generated Java sources
-        if self.settings.os == 'Android' and not self.options.headless:
-            # Copy Java sources
-            script_path = os.path.dirname(os.path.abspath(__file__))
-            generated = os.path.join(script_path, 'android', 'app', 'src', 'main', 'generated')
-
-            target = os.path.join(generated, 'java')
-            source = os.path.join('share', 'java')
-            if not os.path.exists(target):
-                os.makedirs(target)
-
-            self.copy('*.java', target, source)

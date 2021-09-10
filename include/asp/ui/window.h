@@ -6,8 +6,7 @@
 #ifndef INCLUDE_ASP_UI_WINDOW_H
 #define INCLUDE_ASP_UI_WINDOW_H
 
-#include <asp/options.h>
-#include <asp/ui/logs.h>
+#include <asp/ui/drawable.h>
 
 #include <asp/inputs/data.h>
 #include <asp/inputs/serial.h>
@@ -17,37 +16,53 @@
 #include <implot.h>
 #include <vector>
 
-namespace asp::ui {
+namespace asp {
+
+class options;
+
+namespace ui {
 
 class window {
 public:
-   window(boost::asio::io_context &ctx, const asp::options &opts);
+   struct options {
+      bool full_screen{false};
+      int width{1280};
+      int height{900};
+
+      static po_desc_t prepare();
+      static options load(po_vars_t &vm);
+   };
+
+public:
+   window(const asp::options &opts,
+          logs &logs,
+          std::initializer_list<ui::drawable *> drawables);
    ~window();
 
 public:
-   void start();
    bool can_stop() const { return stop_; }
    void update();
+
+   void add_drawable(ui::drawable *drawable) {
+      drawables_.push_back(drawable);
+   }
 
 private:
    void draw();
 
 private:
-   int width_;
-   int height_;
+   asp::ui::window::options options_;
+
    bool stop_{false};
 
    SDL_Window *window_{nullptr};
    SDL_Event event_{};
    ImVec4 clear_color_{0.45f, 0.55f, 0.60f, 1.00f};
 
-   logs logs_{"Messages"};
-   logs raw_{"RAW"};
-
-   inputs::data data_;
-   inputs::serial serial_;
+   std::vector<drawable *> drawables_;
 };
 
-} // namespace asp::ui
+} // namespace ui
+} // namespace asp
 
 #endif /* INCLUDE_ASP_UI_WINDOW_H */

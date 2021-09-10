@@ -13,7 +13,7 @@ set(ASP_GENERATED_INCLUDE_DIR "${ASP_GENERATED_DIR}/include")
 set(ASP_GENERATED_CONFIG_HEADER "${ASP_GENERATED_INCLUDE_DIR}/asp/config.h")
 configure_file(cmake/config.h.in ${ASP_GENERATED_CONFIG_HEADER} @ONLY)
 
-add_executable(arduino-serial-plotter
+add_executable(serial-plotter
    src/main.cpp
    src/options.cpp
    src/ui/std_input_text.cpp
@@ -26,18 +26,18 @@ add_executable(arduino-serial-plotter
    src/inputs/data.cpp
 )
 
-set_target_properties(arduino-serial-plotter PROPERTIES
+set_target_properties(serial-plotter PROPERTIES
    CXX_STANDARD 17
    CXX_STANDARD_REQUIRED YES
    CXX_EXTENSIONS NO
 )
 
-target_link_libraries(arduino-serial-plotter PUBLIC
+target_link_libraries(serial-plotter PUBLIC
    ${CONAN_LIBS}
    SDL2 imgui::opengl3 imgui::sdl implot::implot
 )
 
-target_include_directories(arduino-serial-plotter SYSTEM
+target_include_directories(serial-plotter SYSTEM
    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
    PUBLIC $<BUILD_INTERFACE:${ASP_GENERATED_INCLUDE_DIR}>
 )

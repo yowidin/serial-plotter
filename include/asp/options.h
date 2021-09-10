@@ -8,15 +8,15 @@
 
 #include <asp/types.h>
 #include <asp/inputs/serial.h>
+#include <asp/inputs/data.h>
+#include <asp/ui/window.h>
 
 namespace asp {
 
 struct options {
-   bool full_screen{false};
-   int width{1280};
-   int height{900};
-
+   ui::window::options window;
    inputs::serial::options serial;
+   inputs::data::options data;
 
    static result_t<options> load(int argc, char **argv);
 };

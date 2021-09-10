@@ -9,6 +9,7 @@
 #include <asp/config.h>
 #include <asp/options.h>
 #include <asp/ui/window.h>
+#include <asp/ui/logs.h>
 
 #include <boost/asio.hpp>
 
@@ -27,11 +28,33 @@ public:
 public:
    void run();
 
+   const options &get_options() const { return options_; }
+
+   context_t &get_context() { return ctx_; }
+   ui::window &get_window() { return window_; };
+   inputs::data &get_data() { return data_; }
+
 private:
+   //! I/O Context
    context_t ctx_;
+
+   //! Keep alive job, preventing context from expiring while application is
+   //! running
    keep_alive_t keep_alive_;
 
+   //! Application options
    options options_;
+
+   //! Application log messages
+   ui::logs logs_;
+
+   //! Parsed data container
+   inputs::data data_;
+
+   //! Serial port input
+   inputs::serial serial_;
+
+   //! Main application window
    ui::window window_;
 };
 

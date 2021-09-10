@@ -10,14 +10,16 @@
 #include <vector>
 #include <sstream>
 
+#include <asp/ui/drawable.h>
+
 namespace asp::ui {
 
-class logs {
+class logs : public ui::drawable {
 public:
-   logs(std::string name);
+   logs();
 
 public:
-   void draw();
+   void draw() override;
    void add_entry(const std::string &entry);
 
    template <typename ... ARGS>
@@ -43,7 +45,6 @@ private:
 private:
    std::vector<std::string> logs_{};
    bool auto_scroll_{true};
-   const std::string name_;
    const std::string auto_scroll_id_;
    const std::string clear_id_;
    const std::string child_id_;

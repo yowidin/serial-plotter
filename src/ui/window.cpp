@@ -4,7 +4,9 @@
  * @date   Aug. 21, 2021
  */
 
+#include <asp/options.h>
 #include <asp/ui/window.h>
+#include <asp/ui/logs.h>
 
 #include <glad/glad.h>
 
@@ -24,11 +26,35 @@ void throw_sdl_error(const std::string &func) {
 
 } // namespace
 
-window::window(boost::asio::io_context &ctx, const asp::options &opts)
-   : width_{opts.width}
-   , height_{opts.height}
-   , data_{logs_, raw_}
-   , serial_{ctx, opts, data_, logs_} {
+asp::po_desc_t window::options::prepare() {
+   namespace po = boost::program_options;
+
+   po::options_description od("Window Options");
+
+   // clang-format off
+   od.add_options()
+       ("full-screen", "Start in full screen")
+       ("width", po::value<int>()->default_value(1280), "Window width")
+       ("height", po::value<int>()->default_value(900), "Window height")
+       ;
+   // clang-format on
+
+   return od;
+}
+
+window::options window::options::load(po_vars_t &vm) {
+   auto full_screen = vm.count("full-screen") != 0;
+   auto width = vm["width"].as<int>();
+   auto height = vm["height"].as<int>();
+
+   return ui::window::options{full_screen, width, height};
+}
+
+window::window(const asp::options &opts,
+               logs &logs,
+               std::initializer_list<ui::drawable *> drawables)
+   : options_{opts.window}
+   , drawables_{drawables} {
    // Setup SDL
    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
       throw_sdl_error("SDL_Init");
@@ -37,7 +63,7 @@ window::window(boost::asio::io_context &ctx, const asp::options &opts)
    // Decide GL+GLSL versions
 #if __APPLE__
    // GL 3.2 Core + GLSL 150
-   logs_.add_entry("Setting up GL 3.2 + GLS 150");
+   logs.add_entry("Setting up GL 3.2 + GLS 150");
    const char *glsl_version = "#version 150";
    SDL_GL_SetAttribute(
        SDL_GL_CONTEXT_FLAGS,
@@ -48,7 +74,7 @@ window::window(boost::asio::io_context &ctx, const asp::options &opts)
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
    // GL 3.0 + GLSL 130
-   logs_.add_entry("Setting up GL3.0 + GLS 130");
+   logs_->add_entry("Setting up GL3.0 + GLS 130");
    const char *glsl_version = "#version 130";
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
@@ -64,13 +90,13 @@ window::window(boost::asio::io_context &ctx, const asp::options &opts)
 
    auto window_flags =
        (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-   if (opts.full_screen) {
+   if (options_.full_screen) {
       window_flags = (SDL_WindowFlags)(window_flags | SDL_WINDOW_FULLSCREEN);
    }
 
-   window_ =
-       SDL_CreateWindow("Arduino Serial Plotter", SDL_WINDOWPOS_UNDEFINED,
-                        SDL_WINDOWPOS_UNDEFINED, width_, height_, window_flags);
+   window_ = SDL_CreateWindow("Serial Plotter", SDL_WINDOWPOS_UNDEFINED,
+                              SDL_WINDOWPOS_UNDEFINED, options_.width,
+                              options_.height, window_flags);
 
    SDL_GLContext gl_context = SDL_GL_CreateContext(window_);
    if (SDL_GL_MakeCurrent(window_, gl_context) != 0) {
@@ -83,11 +109,11 @@ window::window(boost::asio::io_context &ctx, const asp::options &opts)
       throw std::runtime_error("gladLoadGL failed");
    }
 
-   logs_.add("OpenGL ", GLVersion.major, "." , GLVersion.minor);
+   logs.add("OpenGL ", GLVersion.major, ".", GLVersion.minor);
    if (GLVersion.major < 3) {
       throw std::runtime_error(
           "Invalid OpenGL version: " + std::to_string(GLVersion.major) + "." +
-              std::to_string(GLVersion.minor));
+          std::to_string(GLVersion.minor));
    }
 
    IMGUI_CHECKVERSION();
@@ -108,10 +134,6 @@ window::~window() {
    SDL_Quit();
 }
 
-void window::start() {
-   serial_.start();
-}
-
 void window::update() {
    while (SDL_PollEvent(&event_)) {
       ImGui_ImplSDL2_ProcessEvent(&event_);
@@ -125,7 +147,7 @@ void window::update() {
       } else if (event_.type == SDL_WINDOWEVENT) {
          switch (event_.window.event) {
             case (SDL_WINDOWEVENT_RESIZED):
-               SDL_GetWindowSize(window_, &width_, &height_);
+               SDL_GetWindowSize(window_, &options_.width, &options_.height);
                break;
          }
       }
@@ -155,8 +177,8 @@ void window::update() {
 
 void window::draw() {
    ImGui::SetNextWindowPos({0, 0});
-   ImGui::SetNextWindowSize(
-       {static_cast<float>(width_), static_cast<float>(height_)});
+   ImGui::SetNextWindowSize({static_cast<float>(options_.width),
+                             static_cast<float>(options_.height)});
 
    ImGui::Begin("Main", nullptr,
                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
@@ -164,24 +186,9 @@ void window::draw() {
                     ImGuiWindowFlags_NoDecoration |
                     ImGuiWindowFlags_AlwaysAutoResize);
 
-   serial_.draw();
-
-   if (ImGui::CollapsingHeader("Logs")) {
-      if (ImGui::BeginTabBar("Logs", ImGuiTabBarFlags_None)) {
-         if (ImGui::BeginTabItem("RAW")) {
-            raw_.draw();
-            ImGui::EndTabItem();
-         }
-
-         if (ImGui::BeginTabItem("Messages")) {
-            logs_.draw();
-            ImGui::EndTabItem();
-         }
-         ImGui::EndTabBar();
-      }
+   for (auto &d : drawables_) {
+      d->draw();
    }
-
-   data_.draw();
 
    ImGui::End();
 }

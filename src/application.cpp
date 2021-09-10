@@ -11,8 +11,11 @@ using namespace asp;
 application::application(options opts)
    : ctx_{}
    , keep_alive_{boost::asio::make_work_guard(ctx_)}
-   , options_{opts}
-   , window_{ctx_, options_} {
+   , options_{std::move(opts)}
+   , logs_{}
+   , data_{options_, logs_}
+   , serial_{ctx_, options_, data_, logs_}
+   , window_{options_, logs_, {&serial_, &logs_, &data_}} {
    // Nothing to do here
 }
 
@@ -22,7 +25,9 @@ application::~application() {
 }
 
 void application::run() {
-   window_.start();
+   if (!options_.serial.port.empty()) {
+      serial_.start();
+   }
 
    while (!window_.can_stop()) {
       window_.update();

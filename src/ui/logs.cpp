@@ -10,16 +10,19 @@
 
 using namespace asp::ui;
 
-logs::logs(std::string name)
-   : name_{std::move(name)}
-   , auto_scroll_id_("Autoscroll##" + name_)
-   , clear_id_("Clear##" + name_)
-   , child_id_("Logs##" + name_)
-   , copy_id_("Copy##" + name_) {
+logs::logs()
+   : auto_scroll_id_("Autoscroll##logs")
+   , clear_id_("Clear##logs")
+   , child_id_("Logs##logs")
+   , copy_id_("Copy##logs") {
    // Nothing to do here
 }
 
 void logs::draw() {
+   if (!ImGui::CollapsingHeader("Logs##logs")) {
+      return;
+   }
+
    ImGui::Checkbox(auto_scroll_id_.c_str(), &auto_scroll_);
    ImGui::SameLine();
    if (ImGui::Button(clear_id_.c_str())) {
