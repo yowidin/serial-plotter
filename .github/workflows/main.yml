@@ -40,8 +40,9 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install conan conan_package_tools
           conan config install ${{ github.workspace }}/profiles/settings.yml
-          conan remote add -i 0 conan_burrito "$CONAN_REMOTE"
-          conan user -r conan_burrito "$CONAN_USER" -p "$CONAN_PASSWORD"
+          echo conan remote add -i 0 conan_burrito "${{ env.CONAN_REMOTE }}"
+          conan remote add -i 0 conan_burrito "${{ env.CONAN_REMOTE }}"
+          conan user -r conan_burrito "${{ env.CONAN_USER }}" -p "${{ env.CONAN_PASSWORD }}"
 
       - name: Build native
         run:  |
