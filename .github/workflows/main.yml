@@ -37,11 +37,12 @@ jobs:
           python-version: '3.x'
       - name: Install dependencies
         run: |
-            python -m pip install --upgrade pip setuptools wheel
-            pip install conan conan_package_tools
-            conan config install ${{ github.workspace }}/profiles/settings.yml
-            conan remote add -i 0 conan-burrito "${{ env.CONAN_REMOTE }}"
-            conan user -r conan-burrito "${{ env.CONAN_USER }}" -p "${{ env.CONAN_PASSWORD }}"
+          python -m pip install --upgrade pip setuptools wheel
+          pip install conan conan_package_tools
+          conan config install ${{ github.workspace }}/profiles/settings.yml
+          echo conan remote add -i 0 conan_burrito "${{ env.CONAN_REMOTE }}"
+          conan remote add -i 0 conan_burrito "${{ env.CONAN_REMOTE }}"
+          conan user -r conan_burrito "${{ env.CONAN_USER }}" -p "${{ env.CONAN_PASSWORD }}"
 
       - name: Build native
         run:  |
