@@ -49,5 +49,5 @@ jobs:
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v2
         with:
-          name: serial-plotter-${{ matrix.os }}.zip
+          name: serial-plotter-${{ matrix.os }}
           path: ${{ github.workspace }}/_build/serial_plotter-*.zip
