@@ -1,4 +1,4 @@
-# Serial Plotter
+# Serial Plotter [![build](https://github.com/yowidin/serial-plotter/actions/workflows/main.yml/badge.svg)](https://github.com/yowidin/serial-plotter/actions/workflows/main.yml)
 A bit more feature-rich replacement for the Arduino's Serial Plotter.
 
 ## About
@@ -8,7 +8,7 @@ After being annoyed by the Arduino Serial Plotters lack of functionality, and su
 
 
 ## Usage
-The recommended way is to [download](TODO) the pre-built binaries. Alternatively you can try to fork this project, replace the dependencies with the dependencies from the [conan repository](https://conan.io/center/) (this will require some code tweaking).
+The recommended way is to [download](https://github.com/yowidin/serial-plotter/releases) the pre-built binaries. Alternatively you can try to fork this project, replace the dependencies with the dependencies from the [conan repository](https://conan.io/center/) (this will require some code tweaking).
 
 The later path will allow you to add some custom logic:
 - You can add a custom data generator by providing a `data_change_cb` to the `data` object via the `set_data_change_callback` and accessing the plot data via the `data`s `get_plot_data` method. 
