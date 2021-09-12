@@ -1,4 +1,14 @@
 #ifndef ASP_CONFIG_H_
 #define ASP_CONFIG_H_
 
+#cmakedefine01 ASP_WINDOWS()
+#cmakedefine01 ASP_APPLE()
+#cmakedefine01 ASP_UNIX()
+
+// https://www.fluentcpp.com/2019/05/28/better-macros-better-flags/
+#define ASP_TARGET_OS(X) ASP_TARGET_OS_PRIVATE_DEFINITION_##X()
+#define ASP_TARGET_OS_PRIVATE_DEFINITION_WINDOWS() ASP_WINDOWS()
+#define ASP_TARGET_OS_PRIVATE_DEFINITION_APPLE() ASP_APPLE()
+#define ASP_TARGET_OS_PRIVATE_DEFINITION_UNIX() ASP_UNIX()
+
 #endif // ASP_CONFIG_H_

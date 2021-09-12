@@ -5,8 +5,8 @@
  */
 
 #include <asp/inputs/data.h>
-#include <asp/ui/logs.h>
 #include <asp/options.h>
+#include <asp/ui/logs.h>
 #include <asp/ui/std_input_text.h>
 
 #include <imgui.h>
@@ -67,19 +67,19 @@ void data::add_raw_entry(const std::string &entry) {
    bool changed = false;
 
    auto add = [&] {
-     try {
-        if (std::regex_match(name, name_regex_)) {
-           auto result = std::stof(value);
-           plot_data_[name].push_back(result);
-           changed = true;
-        }
+      try {
+         if (std::regex_match(name, name_regex_)) {
+            auto result = std::stof(value);
+            plot_data_[name].push_back(result);
+            changed = true;
+         }
 
-        name.clear();
-        value.clear();
-        target = &name;
-     } catch (const std::exception &e) {
-        logs_->add("Error parsing a value (", e.what(), "): ", value);
-     }
+         name.clear();
+         value.clear();
+         target = &name;
+      } catch (const std::exception &e) {
+         logs_->add("Error parsing a value (", e.what(), "): ", value);
+      }
    };
 
    // (name: value,?)+
@@ -111,23 +111,57 @@ void data::add_raw_entry(const std::string &entry) {
 }
 
 void data::draw() {
-   auto set_regex = [&] (auto &ex, auto &text) {
-     try {
-        ex.assign(text);
-        return true;
-     } catch (const std::exception &e) {
-        error_message_ = "Filter error: "s + e.what();
-        return false;
-     }
+   draw_settings();
+   draw_plot();
+}
+
+void data::draw_settings() {
+   if (!error_message_.empty() && !collapsed_) {
+      ImGui::SetNextItemOpen(true);
+   }
+
+   // Update limits, even if data settings are collapsed
+   update_limits();
+
+   if (!ImGui::CollapsingHeader("Data")) {
+      collapsed_ = true;
+      return;
+   }
+
+   auto set_regex = [&](auto &ex, auto &text) {
+      try {
+         ex.assign(text);
+         return true;
+      } catch (const std::exception &e) {
+         error_message_ = "Filter error: "s + e.what();
+         collapsed_ = false;
+         return false;
+      }
    };
+
+   if (!ImGui::BeginTable("data##options", 2,
+                          ImGuiTableFlags_SizingFixedFit)) {
+      return;
+   }
+
+   auto next = [] { ImGui::TableNextColumn(); };
 
    static auto name_error = false;
    static auto graph_error = false;
+
+   next();
    if (ui::std_input_text("Name filter", opts_.name_filter)) {
       name_error = !set_regex(name_regex_, opts_.name_filter);
    }
 
-   ImGui::SameLine();
+   next();
+   ImGui::Checkbox("Follow", &opts_.follow);
+   if (opts_.follow) {
+      ImGui::SameLine();
+      ImGui::DragInt("Window", &opts_.follow_window, 10.0f, 100, 50000);
+   }
+
+   next();
    if (ui::std_input_text("Graph filter", opts_.graph_filter)) {
       graph_error = !set_regex(graph_regex_, opts_.graph_filter);
    }
@@ -136,30 +170,13 @@ void data::draw() {
       error_message_.clear();
    }
 
-   // Plot flags
-   ImGui::SameLine();
-   ImPlotFlags plot_flags = ImPlotFlags_NoTitle;
-
-   // Axis flags
-   const auto x_flags = ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoLabel;
-   ImPlotAxisFlags y_flags = ImPlotAxisFlags_NoLabel;
-
-   ImGui::SameLine();
-   ImGui::Checkbox("Follow", &opts_.follow);
-   const ImPlotAxisFlags follow_flags =
-       ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit;
    if (opts_.follow) {
-      y_flags |= follow_flags;
-
-      ImGui::SameLine();
-      ImGui::DragInt("Window", &opts_.follow_window, 10.0f, 100, 50000);
-
       int max_entries = [&]() {
-        std::size_t result = 0;
-        for (const auto &kv : plot_data_) {
-           result = std::max(kv.second.size(), result);
-        }
-        return static_cast<int>(result);
+         std::size_t result = 0;
+         for (const auto &kv : plot_data_) {
+            result = std::max(kv.second.size(), result);
+         }
+         return static_cast<int>(result);
       }();
 
       int min_x, max_x = max_entries;
@@ -171,13 +188,54 @@ void data::draw() {
       ImPlot::SetNextPlotLimitsX(min_x, max_x, ImGuiCond_Always);
    }
 
+   next();
+   if (ImGui::Button("Clear")) {
+      plot_data_.clear();
+   }
+
+   ImGui::EndTable();
+
    if (!error_message_.empty()) {
       ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s",
                          error_message_.c_str());
    }
+}
 
-   if (ImPlot::BeginPlot("Data", "Time", "Value", {-1, -1}, plot_flags, x_flags,
-                         y_flags)) {
+void data::update_limits() {
+   plot_flags_ = ImPlotFlags_NoTitle;
+
+   // Axis flags
+   x_axis_flags_ = ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoLabel;
+   y_axis_flags_ = ImPlotAxisFlags_NoLabel;
+   if (opts_.follow) {
+      y_axis_flags_ |= (ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit);
+   }
+
+   if (opts_.follow) {
+      int max_entries = [&]() {
+         std::size_t result = 0;
+         for (const auto &kv : plot_data_) {
+            result = std::max(kv.second.size(), result);
+         }
+         return static_cast<int>(result);
+      }();
+
+      max_x_ = max_entries;
+      if (max_entries < opts_.follow_window) {
+         min_x_ = 0;
+      } else {
+         min_x_ = max_entries - opts_.follow_window;
+      }
+   }
+}
+
+void data::draw_plot() {
+   if (opts_.follow) {
+      ImPlot::SetNextPlotLimitsX(min_x_, max_x_, ImGuiCond_Always);
+   }
+
+   if (ImPlot::BeginPlot("Data", "Time", "Value", {-1, -1}, plot_flags_,
+                         x_axis_flags_, y_axis_flags_)) {
       for (const auto &kv : plot_data_) {
          const auto &name = kv.first;
          const auto &values = kv.second;

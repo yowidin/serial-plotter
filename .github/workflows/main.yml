@@ -21,7 +21,7 @@ jobs:
       matrix:
         os:
           - windows-latest
-          - macos-latest
+          - macos-10.13
           - ubuntu-latest
     steps:
       - name: Checkout code
@@ -50,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: serial-plotter
-          path: ${{ github.workspace }}/_build/bin/serial-plotter*
+          path: ${{ github.workspace }}/_build/serial-plotter-*.zip

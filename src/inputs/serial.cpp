@@ -311,19 +311,18 @@ void serial::draw() {
       separator_picker();
    }
 
+   next();
+   ImGui::Checkbox("Mirror to console", &opts_.mirror);
+
+   ImGui::EndTable();
+
    if (!status_.empty()) {
-      next();
       ImGui::Text("Status: ");
       ImGui::SameLine();
       ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", status_.c_str());
    } else {
-      next();
-
-      next();
       ImGui::Text(connected_ ? "Status: operating" : "Status: idle");
    }
-
-   ImGui::EndTable();
 }
 
 void serial::close() {

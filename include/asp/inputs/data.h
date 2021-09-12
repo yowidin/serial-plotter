@@ -69,6 +69,11 @@ public:
    }
 
 private:
+   void draw_settings();
+   void draw_plot();
+   void update_limits();
+
+private:
    data::options opts_;
    ui::logs *logs_;
    container_t plot_data_;
@@ -80,6 +85,13 @@ private:
 
    data_change_cb data_change_cb_{};
    draw_plot_cb draw_plot_cb_{};
+
+   bool collapsed_{false};
+   int plot_flags_;
+   int x_axis_flags_;
+   int y_axis_flags_;
+   int min_x_{0};
+   int max_x_{0};
 };
 
 } // namespace inputs
