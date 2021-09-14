@@ -51,6 +51,15 @@ target_sources(serial-plotter PRIVATE
 
    src/inputs/serial.cpp
    src/inputs/data.cpp
+
+   src/render/backend.cpp
+   src/render/frontend.cpp
+   src/render/opengl2.cpp
+   src/render/opengl3.cpp
+   src/render/gles2.cpp
+   src/render/gles3.cpp
+   src/render/detail/imgui_impl_sdl_es2.cpp
+   src/render/detail/imgui_impl_sdl_es3.cpp
 )
 
 set_target_properties(serial-plotter
@@ -63,9 +72,11 @@ set_target_properties(serial-plotter
        SOVERSION 0
 )
 
+find_package(OpenGL REQUIRED)
 target_link_libraries(serial-plotter PUBLIC
    ${CONAN_LIBS_SDL2} ${CONAN_LIBS_GLAD}
-   imgui::opengl3 imgui::sdl implot::implot Boost::program_options
+   imgui::opengl2 imgui::opengl3
+   OpenGL::GL imgui::sdl implot::implot Boost::program_options
 )
 
 target_include_directories(serial-plotter SYSTEM

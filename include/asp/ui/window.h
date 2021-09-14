@@ -10,11 +10,13 @@
 
 #include <asp/inputs/data.h>
 #include <asp/inputs/serial.h>
+#include <asp/render/frontend.h>
 
 #include <SDL2/SDL.h>
 #include <imgui.h>
 #include <implot.h>
 #include <vector>
+#include <memory>
 
 namespace asp {
 
@@ -56,7 +58,9 @@ private:
    bool stop_{false};
 
    SDL_Window *window_{nullptr};
+   SDL_GLContext context_;
    SDL_Event event_{};
+   std::unique_ptr<render::frontend> frontend_;
    ImVec4 clear_color_{0.45f, 0.55f, 0.60f, 1.00f};
 
    std::vector<drawable *> drawables_;

@@ -4,15 +4,12 @@
  * @date   Aug. 21, 2021
  */
 
+#include <asp/config.h>
 #include <asp/options.h>
-#include <asp/ui/window.h>
 #include <asp/ui/logs.h>
+#include <asp/ui/window.h>
 
 #include <glad/glad.h>
-
-#include <imgui_impl_opengl3.h>
-#include <imgui_impl_sdl.h>
-#include <imgui_internal.h>
 
 #include <implot.h>
 
@@ -22,6 +19,36 @@ namespace {
 
 void throw_sdl_error(const std::string &func) {
    throw std::runtime_error(func + " error: " + SDL_GetError());
+}
+
+void throw_errors(const char *context) {
+   if (!glad_glGetError) {
+      throw std::runtime_error(context);
+   }
+
+   std::ostringstream ostream;
+
+   GLenum ec;
+   while ((ec = glad_glGetError()) != GL_NO_ERROR) {
+      ostream << "OpenGL error inside " << context << ": 0x" << std::hex << ec
+              << "\n";
+   }
+
+   auto res = ostream.str();
+   if (!res.empty()) {
+      throw std::runtime_error(res);
+   }
+}
+
+void glad_callback(const char *name, void *, int, ...) {
+   throw_errors(name);
+}
+
+void consume_errors(std::string_view context, logs &logs) {
+   GLenum ec;
+   while ((ec = glad_glGetError()) != GL_NO_ERROR) {
+      logs.add("OpenGL error inside ", context, ": 0x", std::hex, ec);
+   }
 }
 
 } // namespace
@@ -60,33 +87,21 @@ window::window(const asp::options &opts,
       throw_sdl_error("SDL_Init");
    }
 
-   // Decide GL+GLSL versions
-#if __APPLE__
-   // GL 3.2 Core + GLSL 150
-   logs.add_entry("Setting up GL 3.2 + GLS 150");
-   const char *glsl_version = "#version 150";
-   SDL_GL_SetAttribute(
-       SDL_GL_CONTEXT_FLAGS,
-       SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+#if ASP_TARGET_OS(APPLE)
+   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
+                       SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                        SDL_GL_CONTEXT_PROFILE_CORE);
+
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
-   // GL 3.0 + GLSL 130
-   logs.add_entry("Setting up GL3.0 + GLS 130");
-   const char *glsl_version = "#version 130";
-   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                       SDL_GL_CONTEXT_PROFILE_CORE);
-   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#endif
+#elif ASP_TARGET_OS(UNIX)
+   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
-   // Create window with graphics context
-   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#endif
 
    auto window_flags =
        (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -98,45 +113,61 @@ window::window(const asp::options &opts,
                               SDL_WINDOWPOS_UNDEFINED, options_.width,
                               options_.height, window_flags);
 
-   SDL_GLContext gl_context = SDL_GL_CreateContext(window_);
-   if (SDL_GL_MakeCurrent(window_, gl_context) != 0) {
+   context_ = SDL_GL_CreateContext(window_);
+   if (!context_) {
+      throw_sdl_error("SDL_GL_CreateContext");
+   }
+
+   if (SDL_GL_MakeCurrent(window_, context_) != 0) {
       throw_sdl_error("SDL_GL_MakeCurrent");
    }
    SDL_GL_SetSwapInterval(1); // Enable vsync
 
    // Initialize OpenGL loader
    if (gladLoadGL() == 0) {
+      throw_errors("gladLoadGL");
       throw std::runtime_error("gladLoadGL failed");
    }
 
-   logs.add("OpenGL ", GLVersion.major, ".", GLVersion.minor);
-   if (GLVersion.major < 3) {
-      throw std::runtime_error(
-          "Invalid OpenGL version: " + std::to_string(GLVersion.major) + "." +
-          std::to_string(GLVersion.minor));
+#ifdef GLAD_DEBUG
+   glad_set_post_callback(&glad_callback);
+#endif
+
+   consume_errors("setup", logs);
+
+   int profile;
+   SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profile);
+   const char *suffix = "";
+   if (profile & SDL_GL_CONTEXT_PROFILE_ES) {
+      suffix = " ES";
    }
 
-   IMGUI_CHECKVERSION();
-   ImGui::CreateContext();
-   ImPlot::CreateContext();
+   logs.add("OpenGL version: ", GLVersion.major, ".", GLVersion.minor, suffix);
+   std::cout << "OpenGL version: " << GLVersion.major << "." << GLVersion.minor
+             << suffix << std::endl;
 
-   ImGui_ImplSDL2_InitForOpenGL(window_, gl_context);
-   ImGui_ImplOpenGL3_Init();
+   frontend_ = std::make_unique<render::frontend>(*window_, context_);
+
+   consume_errors("imgui", logs);
 }
 
 window::~window() {
-   ImGui_ImplOpenGL3_Shutdown();
-   ImGui_ImplSDL2_Shutdown();
-   ImPlot::DestroyContext();
-   ImGui::DestroyContext();
+   frontend_.reset();
 
-   SDL_DestroyWindow(window_);
-   SDL_Quit();
+   if (context_ != nullptr) {
+      SDL_GL_DeleteContext(context_);
+      context_ = nullptr;
+   }
+
+   if (window_ != nullptr) {
+      SDL_DestroyWindow(window_);
+      window_ = nullptr;
+   }
 }
 
 void window::update() {
    while (SDL_PollEvent(&event_)) {
-      ImGui_ImplSDL2_ProcessEvent(&event_);
+      frontend_->process_event(event_);
       if (event_.type == SDL_QUIT) {
          stop_ = true;
       } else if (event_.type == SDL_KEYUP) {
@@ -159,18 +190,16 @@ void window::update() {
       SDL_StopTextInput();
    }
 
-   ImGui_ImplOpenGL3_NewFrame();
-   ImGui_ImplSDL2_NewFrame(window_);
-   ImGui::NewFrame();
+   frontend_->new_frame();
 
-   draw();
-
-   ImGui::Render();
    auto &io = ImGui::GetIO();
    glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
    glClearColor(clear_color_.x, clear_color_.y, clear_color_.z, clear_color_.w);
    glClear(GL_COLOR_BUFFER_BIT);
-   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+   draw();
+
+   frontend_->render();
 
    SDL_GL_SwapWindow(window_);
 }

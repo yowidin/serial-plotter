@@ -26,7 +26,4 @@ class Recipe(ConanFile):
     def configure(self):
         self.options['glad'].spec = 'gl'
         self.options['glad'].gl_profile = 'core'
-        if self.settings.os in ['Android', 'iOS']:
-            self.options['glad'].gles2_version = '3.0'
-        else:
-            self.options['glad'].gl_version = '3.2'
+        self.options['glad'].gl_version = '3.2'
