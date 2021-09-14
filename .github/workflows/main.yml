@@ -42,7 +42,11 @@ jobs:
           conan config install ${{ github.workspace }}/profiles/settings.yml
           conan remote add -i 0 conan_burrito "${{ env.CONAN_REMOTE }}"
           conan user -r conan_burrito "${{ env.CONAN_USER }}" -p "${{ env.CONAN_PASSWORD }}"
-
+      - name: Install OpenGL
+        if: startsWith(matrix.os, 'ubuntu')
+        run:  |
+          sudo apt-get update
+          sudo apt-get install mesa-common-dev
       - name: Build native
         run:  |
           python .ci/build.py
