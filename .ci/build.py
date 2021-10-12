@@ -12,7 +12,7 @@ install_args = ['conan', 'install', '..', '-b', 'missing', '-s', 'compiler.cppst
 
 if platform == 'darwin':
     # Build for High Sierra
-    install_args.extend(['-s', 'os.version=10.13', '-s'])
+    install_args.extend(['-s', 'os.version=10.13'])
 
 run(install_args, **kwargs)
 run(['conan', 'build', '..'], **kwargs)
