@@ -104,7 +104,8 @@ window::window(const asp::options &opts,
 #endif
 
    auto window_flags =
-       (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+       (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
+                         SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN);
    if (options_.full_screen) {
       window_flags = (SDL_WindowFlags)(window_flags | SDL_WINDOW_FULLSCREEN);
    }
