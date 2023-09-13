@@ -15,11 +15,11 @@ class Recipe(ConanFile):
     settings = 'os', 'arch', 'compiler', 'build_type'
 
     requires = [
-        'boost/1.75.0',
-        'sdl/2.0.14',
-        'imgui/1.83',
-        'implot/0.11',
-        'glad/0.1.34'
+        'boost/1.80.0',
+        'sdl/2.26.1',
+        'imgui/1.89.8',
+        'implot/0.16',
+        'glad/0.1.36'
     ]
 
     keep_imports = True
