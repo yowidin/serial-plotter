@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(serial_plotter VERSION 0.0.1)
-
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(NO_OUTPUT_DIRS)
+project(serial_plotter VERSION 0.0.2)
 
 set(ASP_WINDOWS OFF)
 set(ASP_APPLE OFF)
@@ -69,7 +66,7 @@ target_sources(serial-plotter PRIVATE
 
    ${CMAKE_CURRENT_BINARY_DIR}/bindings/imgui_impl_opengl2.cpp
    ${CMAKE_CURRENT_BINARY_DIR}/bindings/imgui_impl_opengl3.cpp
-   ${CMAKE_CURRENT_BINARY_DIR}/bindings/imgui_impl_sdl.cpp
+   ${CMAKE_CURRENT_BINARY_DIR}/bindings/imgui_impl_sdl2.cpp
 )
 
 set_target_properties(serial-plotter
@@ -78,7 +75,7 @@ set_target_properties(serial-plotter
        CXX_STANDARD_REQUIRED YES
        CXX_EXTENSIONS NO
 
-       VERSION 0.0.1
+       VERSION 0.0.2
        SOVERSION 0
 )
 
