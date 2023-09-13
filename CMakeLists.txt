@@ -94,7 +94,11 @@ target_include_directories(serial-plotter SYSTEM
 
 #################################################################################
 ### Packaging
+include(InstallRequiredSystemLibraries)
+set(CPACK_PACKAGE_NAME "${CMAKE_PROJECT_NAME}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 include(CPack)
+
 include(GNUInstallDirs)
 install(
     TARGETS serial-plotter

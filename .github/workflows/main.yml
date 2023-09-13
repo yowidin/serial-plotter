@@ -60,8 +60,15 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: serial-plotter-macos
-          path: ${{ github.workspace }}/build/**/serial_plotter-*.zip
+          name: serial-plotter-macos-x86
+          path: ${{ github.workspace }}/build/x86_64/Release/serial_plotter-*.zip
+          if-no-files-found: error
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: serial-plotter-macos-armv8
+          path: ${{ github.workspace }}/build/armv8/Release/serial_plotter-*.zip
           if-no-files-found: error
 
       - name: Upload conan packages
