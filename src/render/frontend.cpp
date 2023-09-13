@@ -13,7 +13,7 @@
 #include <imgui.h>
 #include <implot.h>
 
-#include <imgui_impl_sdl.h>
+#include <imgui_impl_sdl2.h>
 
 using namespace asp::render;
 
@@ -62,9 +62,10 @@ frontend::frontend(SDL_Window &window, SDL_GLContext context)
 frontend::~frontend() {
    backend_.reset();
 
+   ImGui_ImplSDL2_Shutdown();
+
    ImPlot::DestroyContext();
    ImGui::DestroyContext();
-   ImGui_ImplSDL2_Shutdown();
 }
 
 void frontend::new_frame() {

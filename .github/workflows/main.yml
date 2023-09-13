@@ -1,57 +1,200 @@
-name: build
-
-env:
-  CONAN_REMOTE: "${{ secrets.CONAN_REMOTE }}"
-  CONAN_USER: "${{ secrets.CONAN_USER }}"
-  CONAN_PASSWORD: "${{ secrets.CONAN_PASSWORD }}"
-
+---
+name: Build
 
 on:
   push:
-    branches:
-      - "master"
+    branches-ignore: [ master ]
+    tags:
+      - "**"
+  pull_request:
+    branches: [ master ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    name: build-all
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix:
-        os:
-          - windows-latest
-          - macos-10.15
-          - ubuntu-latest
+  ################################################################################
+  # Build macOS
+  ################################################################################
+  build_macos:
+    runs-on: macos-12
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v1
-      - name: Checkout profiles
-        uses: actions/checkout@v2
-        with:
-          repository: conan-burrito/profiles
-          path: profiles
+        uses: actions/checkout@v3
+
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: '3.x'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install conan conan_package_tools
-          conan config install ${{ github.workspace }}/profiles/settings.yml
-          conan remote add -i 0 conan_burrito "${{ env.CONAN_REMOTE }}"
-          conan user -r conan_burrito "${{ env.CONAN_USER }}" -p "${{ env.CONAN_PASSWORD }}"
-      - name: Install OpenGL
-        if: startsWith(matrix.os, 'ubuntu')
+          pip install conan
+
+      - name: Configure conan
+        run: |
+          conan --version
+          conan profile detect
+          conan remote add conan-burrito "${{ secrets.CONAN_UPLOAD }}"
+          conan remote login conan-burrito "${{ secrets.CONAN_USER_NAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+
+      - name: Build x86
+        run:  |
+          conan build -b missing -s compiler.cppstd=17 -s build_type=Release \
+            -c:h tools.cmake.cmake_layout:build_folder_vars='["settings.arch"]' \
+            -s os.version=10.13 -s:h arch=x86_64 .
+          cd build/x86_64/Release
+          cpack -G ZIP
+
+      - name: Build ARM
+        run:  |
+          conan build -b missing -s compiler.cppstd=17 -s build_type=Release \
+            -c:h tools.cmake.cmake_layout:build_folder_vars='["settings.arch"]' \
+            -s os.version=11.0 -s:h arch=armv8 .
+          cd build/armv8/Release
+          cpack -G ZIP
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: serial-plotter-macos
+          path: ${{ github.workspace }}/build/**/serial_plotter-*.zip
+          if-no-files-found: error
+
+      - name: Upload conan packages
+        run: |
+          conan upload -r=conan-burrito '*:*' -c
+
+  ################################################################################
+  # Build Ubuntu
+  ################################################################################
+  build_ubuntu:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install conan
+
+      - name: Configure conan
+        run: |
+          conan --version
+          conan profile detect
+          conan remote add conan-burrito "${{ secrets.CONAN_UPLOAD }}"
+          conan remote login conan-burrito "${{ secrets.CONAN_USER_NAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+
+      - name: Install dependencies
         run:  |
           sudo apt-get update
-          sudo apt-get install mesa-common-dev
-      - name: Build native
+          sudo apt-get install -y ninja-build pkg-config wget libva-dev libvdpau-dev libx11-xcb-dev \
+               libfontenc-dev libice-dev libsm-dev libxaw7-dev libxcomposite-dev libxcursor-dev \
+               libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxkbfile-dev \
+               libxmu-dev libxmuu-dev libxpm-dev libxrandr-dev libxrender-dev libxres-dev libxss-dev \
+               libxt-dev libxtst-dev libxv-dev libxvmc-dev libxxf86vm-dev libxcb-render0-dev \
+               libxcb-render-util0-dev libxcb-xkb-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev \
+               libxcb-randr0-dev libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev \
+               libxcb-dri3-dev uuid-dev libxcb-util-dev libxcb-util0-dev libxcb-cursor-dev \
+               mesa-common-dev libegl-dev
+
+      - name: Build
         run:  |
-          python .ci/build.py
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v2
+          conan build -b missing -s compiler.cppstd=17 -s build_type=Release .
+          cd build/Release
+          cpack -G ZIP
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: serial-plotter-${{ matrix.os }}
-          path: ${{ github.workspace }}/_build/serial_plotter-*.zip
+          name: serial-plotter-ubuntu
+          path: ${{ github.workspace }}/build/Release/serial_plotter-*.zip
+          if-no-files-found: error
+
+      - name: Upload conan packages
+        run: |
+          conan upload -r=conan-burrito '*:*' -c
+
+  ################################################################################
+  # Build Windows
+  ################################################################################
+  build_windows:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install conan
+
+      - name: Configure conan
+        run: |
+          conan --version
+          conan profile detect
+          conan remote add conan-burrito "${{ secrets.CONAN_UPLOAD }}"
+          conan remote login conan-burrito "${{ secrets.CONAN_USER_NAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+
+      - name: Build
+        run:  |
+          conan build -b missing -s compiler.cppstd=17 -s build_type=Release .
+          cd Build
+          cpack -G ZIP
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: serial-plotter-windows
+          path: ${{ github.workspace }}/build/serial_plotter-*.zip
+          if-no-files-found: error
+
+      - name: Upload conan packages
+        run: |
+          conan upload -r=conan-burrito "*:*" -c
+
+  ################################################################################
+  # Deploy
+  ################################################################################
+  deploy:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - build_macos
+      - build_ubuntu
+      - build_windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifact
+
+      - name: List artifacts
+        run: ls -R
+        working-directory: artifact
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            artifact/**/*
+          fail_on_unmatched_files: true
+

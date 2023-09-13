@@ -185,7 +185,7 @@ void data::draw_settings() {
       } else {
          min_x = max_entries - opts_.follow_window;
       }
-      ImPlot::SetNextPlotLimitsX(min_x, max_x, ImGuiCond_Always);
+      ImPlot::SetNextAxisLimits(ImAxis_X1, min_x, max_x, ImGuiCond_Always);
    }
 
    next();
@@ -231,11 +231,13 @@ void data::update_limits() {
 
 void data::draw_plot() {
    if (opts_.follow) {
-      ImPlot::SetNextPlotLimitsX(min_x_, max_x_, ImGuiCond_Always);
+      ImPlot::SetNextAxisLimits(ImAxis_X1, min_x_, max_x_, ImGuiCond_Always);
    }
 
-   if (ImPlot::BeginPlot("Data", "Time", "Value", {-1, -1}, plot_flags_,
-                         x_axis_flags_, y_axis_flags_)) {
+   if (ImPlot::BeginPlot("Data", {-1, -1}, plot_flags_)) {
+      ImPlot::SetupAxis(ImAxis_X1, "Time", x_axis_flags_);
+      ImPlot::SetupAxis(ImAxis_Y1, "Value", y_axis_flags_);
+
       for (const auto &kv : plot_data_) {
          const auto &name = kv.first;
          const auto &values = kv.second;
